@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.venv*/
+outputs/
+build/
+dist/
+*.egg-info/
+data/
+models/
+.env
+.env.*
+!.env.example
+*.log
