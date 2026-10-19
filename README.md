@@ -23,15 +23,12 @@ This is the **inference release**: environment setup, benchmark input preparatio
 model download, and single-input or batch inference. It contains no training
 launchers, training recipes, optimizers, or training framework dependencies.
 
-<details>
-<summary><b>Method overview</b></summary>
+## Method overview
 
 <img src="docs/assets/verus_data_training.png" alt="The paper's human-anchored data construction and progressive learning pipeline" width="100%">
 
 The figure describes the method in the paper. The scripts in this repository
 run the released model; the figure is not a set of executable training instructions.
-
-</details>
 
 ## Quick start
 
