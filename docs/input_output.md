@@ -38,8 +38,9 @@ Do not set `--start`, `--end`, or a different `--fps` for frame inputs.
 
 ## Optional video input
 
-`--video` accepts a local file decoded by PyAV/FFmpeg. MP4 is verified by the
-bundled example; other containers and codecs depend on the installed decoder.
+`--video` accepts a local file decoded by PyAV/FFmpeg. The bundled source video is decoded by the
+example; other containers and codecs depend on the installed decoder. Its
+`pole_cam.mp4` filename is retained from upstream, but its container is FLV.
 The first video stream is used, and audio is ignored. Video URLs are not accepted.
 
 | Option | Meaning | Default |

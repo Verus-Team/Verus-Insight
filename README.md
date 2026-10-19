@@ -1,12 +1,61 @@
-# Verus-Insight
+<div align="center">
 
-Inference code for **Verus-Insight-8B**, a vision-language model that inspects
-visual artifacts in videos and produces inspection criteria, findings, and a
-structured real/fake judgment.
+<img src="docs/assets/verus-banner.svg" alt="Verus-Insight — Towards Explainable Artifact Detection in AI-Generated Videos" width="100%">
 
+**Inspection Planning → Evidence Verification → Evidence Aggregation**
+
+[Homepage](https://verus-team.github.io/Verus-Insight-Preview/) ·
 [Model](https://huggingface.co/Verus-Team/Verus-Insight-8B) ·
-[Dataset](https://huggingface.co/datasets/Verus-Team/Verus-Bench) ·
-[GitHub](https://github.com/Verus-Team/Verus-Insight)
+[Verus-Bench](https://huggingface.co/datasets/Verus-Team/Verus-Bench) ·
+[Examples](examples/README.md) · [Documentation](#documentation)
+
+**8B vision-language model** &nbsp; · &nbsp; **Transformers / vLLM** &nbsp; · &nbsp; **Apache-2.0 code**
+
+</div>
+
+Verus-Insight inspects human-perceivable artifacts in AI-generated videos.
+Built on **Qwen3-VL-8B-Instruct**, it generates video-specific inspection criteria,
+verifies them against the visual input, and aggregates the observations into a
+structured real/fake judgment. Human-anchored full-process supervision follows
+**Context → Rubric → Audit → Aggregation**.
+
+This is the **inference release**: environment setup, benchmark input preparation,
+model download, and single-input or batch inference. It contains no training
+launchers, training recipes, optimizers, or training framework dependencies.
+
+<details>
+<summary><b>Method overview</b></summary>
+
+<img src="docs/assets/verus_data_training.png" alt="The paper's human-anchored data construction and progressive learning pipeline" width="100%">
+
+The figure describes the method in the paper. The scripts in this repository
+run the released model; the figure is not a set of executable training instructions.
+
+</details>
+
+## Quick start
+
+```bash
+git clone https://github.com/Verus-Team/Verus-Insight.git
+cd Verus-Insight
+PYTHON=python3.12 bash scripts/install.sh transformers
+source .venv-transformers/bin/activate
+
+# Download the model once; reuse the local directory for inference.
+hf download Verus-Team/Verus-Insight-8B --local-dir models/Verus-Insight-8B
+
+# Run the bundled original benchmark frames.
+CUDA_VISIBLE_DEVICES=0 python scripts/infer.py \
+  --model models/Verus-Insight-8B \
+  --frames-json examples/frames.json --output outputs/example.json
+```
+
+Use a Linux CUDA environment. The verified Transformers example uses one H100
+80GB GPU; this is an observed configuration, not a minimum memory requirement.
+If Hugging Face access is required, run `hf auth login` before downloading.
+The bundled [saved responses](examples/README.md) can be inspected without a GPU.
+
+## Release contents
 
 The repository has four public scripts:
 
@@ -42,7 +91,19 @@ are in `pyproject.toml`; [environment details](docs/environment.md) record the
 verified Python, CUDA, package versions, and hardware. The examples used one
 H100 80GB GPU for Transformers and two for the reference vLLM configuration.
 
-## 2. Prepare the data
+## 2. Download the model
+
+```bash
+hf download Verus-Team/Verus-Insight-8B --local-dir models/Verus-Insight-8B
+```
+
+To freeze a particular release, add `--revision <model-commit>` to `hf download`.
+Transformers can also load the Hub ID directly, or accept `--revision` with that
+ID. For a local snapshot, pass `--model models/Verus-Insight-8B`. Use the same
+snapshot throughout an inference run and its retries. The vLLM client instead
+uses the model name exposed by the running server.
+
+## 3. Prepare the data
 
 Download the released frames and metadata and prepare the available subset:
 
@@ -69,7 +130,7 @@ Generated paths are relative to the output manifest. For a full run, export
 Hub downloads require uploaded files and access; use `hf auth login` for private
 repositories. `--revision` can pin a dataset commit with `--download`.
 
-## 3. Run batch inference
+## 4. Run batch inference
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 python scripts/batch_infer.py \
@@ -117,7 +178,7 @@ python scripts/batch_infer.py --backend vllm \
 authenticated server. A single GPU can use `--tensor-parallel-size 1`, subject to
 available memory; this changes the reference serving configuration.
 
-## 4. Infer on your own input
+## 5. Infer on your own input
 
 The single-input script converts local media into ordered images and timestamp
 text, applies the independent [prompt](src/verus_insight/prompts/inspect.json),
@@ -160,6 +221,36 @@ See [real example outputs](examples/README.md) and the
 Defaults: at most 64 images, 3,136–65,536 pixels per image, greedy decoding,
 8,192 output tokens, seed `20260913`, thinking disabled, context budget 65,536.
 Images are never silently truncated. `--help` lists backend and input options.
+
+## Reported results
+
+The latest manuscript reports the following percentages for the final model.
+These are paper results, not measurements produced by the installation checks
+or bundled single-video examples.
+
+| Benchmark | Balanced accuracy ↑ | Plan F1 ↑ | Finding F1 ↑ |
+| --- | ---: | ---: | ---: |
+| Verus-Bench | 89.06 | 24.70 | 15.97 |
+| RewardData | 94.79 | 31.33 | 35.42 |
+
+Verus-Bench contains **192 videos** (96 real / 96 generated), **320 annotated
+artifact findings**, and **17 artifact categories**. Distributed media cover
+166 samples; the full benchmark and available-media subset are distinct.
+
+Plan F1 and Finding F1 use independent one-to-one semantic matching. They measure
+inspection coverage and reference artifact recovery; they do not measure box or
+timestamp accuracy. A reference nonmatch does not by itself establish that a
+visual observation is unsupported. This release generates predictions and does
+not run the paper's scoring pipeline.
+
+## Documentation
+
+| Guide | What it covers |
+| --- | --- |
+| [Environment](docs/environment.md) | Tested hardware, dependencies, precision, and memory scope |
+| [Benchmark](docs/benchmark.md) | Full vs. available data, frame protocol, and reference serving settings |
+| [Inputs and outputs](docs/input_output.md) | Local media, timestamp and coordinate conventions, failure records, and resume |
+| [Real examples](examples/README.md) | Original frames and saved Transformers / vLLM responses |
 
 ## Development and license
 

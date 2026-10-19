@@ -16,6 +16,7 @@ transformers = ["torch==2.11.0", "torchvision==0.26.0", "transformers==5.12.1"]
 vllm = ["vllm==0.18.0", "transformers==4.57.6"]
 
 [project.urls]
+Homepage = "https://verus-team.github.io/Verus-Insight-Preview/"
 Repository = "https://github.com/Verus-Team/Verus-Insight"
 Issues = "https://github.com/Verus-Team/Verus-Insight/issues"
 Model = "https://huggingface.co/Verus-Team/Verus-Insight-8B"
